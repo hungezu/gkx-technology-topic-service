@@ -73,24 +73,55 @@
 .ttf-milestones > div > i { position: absolute; z-index: 2; left: 4px; bottom: 32px; width: 8px; height: 8px; border: 2px solid #fff; border-radius: 50%; background: #1877ff; }
 .ttf-milestones time { position: absolute; bottom: 8px; left: 0; color: #97a1ac; font-size: 11px; }
 
-.ttf-tree-panel { position: relative; height: 568px; margin-top: 16px; padding: 16px 22px; overflow: hidden; background-color: #f8f9fb !important; background-image: radial-gradient(#f1f2f5 .9px,transparent .9px); background-size: 14px 14px; }
+.ttf-tree-panel { position: relative; height: 650px; margin-top: 16px; padding: 16px 22px; overflow: hidden; background: #fff !important; border: 1px solid #e4e9f0; }
 .ttf-tree-toolbar { position: absolute; top: 18px; right: 20px; z-index: 2; display: flex; align-items: center; gap: 6px; }
 .ttf-tree-toolbar button,
 .ttf-tree-toolbar span { display: grid; place-items: center; height: 28px; min-width: 28px; padding: 0 9px; border: 1px solid #dce2ea; border-radius: 3px; color: #606c7c; background: #fff; font-size: 11px; }
 .ttf-tree-toolbar button.active { color: #1877ff; border-color: #1877ff; }
-.ttf-tree { position: relative; display: flex; align-items: center; height: 490px; padding-left: 20px; }
+.ttf-tree-toolbar button:disabled { color: #aab4c0; background: #f5f7fa; cursor: not-allowed; }
+.ttf-tree-toolbar button:focus-visible { outline: 2px solid #1877ff; outline-offset: 2px; }
+.ttf-tree-viewport { position: relative; height: 486px; margin-top: 8px; overflow: auto; overscroll-behavior: contain; background: #f8fafd; border: 1px solid #e5ebf2; border-radius: 6px; scrollbar-color: #c4d1df transparent; }
+.ttf-tree-sizer { position: relative; width: calc(1090px * var(--ttf-tree-scale)); min-width: 100%; height: calc(456px * var(--ttf-tree-scale)); min-height: 100%; }
+.ttf-tree-canvas { position: absolute; top: 0; left: 0; width: 1090px; height: 456px; padding: 28px 32px; display: grid; grid-template-columns: 184px minmax(0, 1fr); align-items: center; gap: 76px; transform: scale(var(--ttf-tree-scale)); transform-origin: left top; }
 .ttf-tree-root,
-.ttf-tree-children article { position: relative; width: 174px; height: 86px; padding: 14px 16px; border: 1px solid #dce2ea; background: #fff; box-shadow: 0 4px 16px rgba(70,95,125,.05); }
-.ttf-tree-root { border-color: #1877ff; }
+.ttf-tree-branch { position: relative; width: 184px; min-height: 82px; padding: 12px 14px; color: #262c36; background: #fff; border: 1px solid #d3deea; border-radius: 6px; box-shadow: 0 4px 14px rgba(70,95,125,.05); text-align: left; cursor: pointer; }
+.ttf-tree-root { min-height: 96px; border-color: #1877ff; }
+.ttf-tree-root::after { position: absolute; top: 50%; right: -77px; width: 76px; height: 1px; content: ""; background: #8ea7c1; }
+.ttf-tree-root small { display: block; margin-bottom: 3px; color: #4d7eaf; font-size: 10px; }
+.ttf-tree-root.is-selected,
+.ttf-tree-branch.is-selected { background: #eef6ff; border-color: #1877ff; }
 .ttf-tree-root b,
-.ttf-tree-children b { display: block; color: #262c36; font-size: 15px; }
+.ttf-tree-branch b { display: block; color: #262c36; font-size: 14px; }
 .ttf-tree-root span,
-.ttf-tree-children span { display: inline-block; margin-top: 9px; color: #97a1ac; font-size: 11px; }
+.ttf-tree-branch > span { display: inline-block; margin-top: 8px; color: #5d6d80; font-size: 11px; }
 .ttf-tree-root em,
-.ttf-tree-children em { position: absolute; right: 12px; bottom: 12px; padding: 3px 8px; color: #606c7c; background: #f2f4f7; font-size: 11px; font-style: normal; }
-.ttf-tree svg { width: 170px; height: 320px; overflow: visible; }
-.ttf-tree svg path { fill: none; stroke: #8293a9; stroke-width: 2; }
-.ttf-tree-children { display: grid; gap: 18px; }
+.ttf-tree-branch > em { position: absolute; right: 12px; bottom: 11px; padding: 3px 7px; color: #516a84; background: #edf2f7; border-radius: 3px; font-size: 10px; font-style: normal; }
+.ttf-tree-branches,
+.ttf-tree-leaves { margin: 0; padding: 0; list-style: none; }
+.ttf-tree-branches { position: relative; display: grid; gap: 18px; }
+.ttf-tree-branches::before { position: absolute; top: 40px; bottom: 40px; left: -38px; width: 1px; content: ""; background: #8ea7c1; }
+.ttf-tree-branches > li { position: relative; display: grid; grid-template-columns: 184px minmax(0, 1fr); align-items: center; gap: 46px; }
+.ttf-tree-branches > li::before { position: absolute; top: 41px; left: -38px; width: 38px; height: 1px; content: ""; background: #8ea7c1; }
+.ttf-tree-branches > li.is-expanded .ttf-tree-branch::after { position: absolute; top: 40px; right: -47px; width: 46px; height: 1px; content: ""; background: #8ea7c1; }
+.ttf-tree-leaves { display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 10px; }
+.ttf-tree-leaves > li { position: relative; }
+.ttf-tree-leaves > li::before { position: absolute; top: 50%; left: -10px; width: 10px; height: 1px; content: ""; background: #b3c2d2; }
+.ttf-tree-leaves button { width: 100%; min-height: 70px; padding: 10px 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #2a3e56; background: #fff; border: 1px solid #dce4ed; border-radius: 5px; text-align: left; cursor: pointer; }
+.ttf-tree-leaves button:hover,
+.ttf-tree-leaves button.is-selected { background: #f0f7ff; border-color: #8eb6e4; }
+.ttf-tree-leaves button:focus-visible,
+.ttf-tree-root:focus-visible,
+.ttf-tree-branch:focus-visible { outline: 2px solid #1877ff; outline-offset: 2px; }
+.ttf-tree-leaves button > span { min-width: 0; display: grid; gap: 4px; }
+.ttf-tree-leaves button b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.ttf-tree-leaves button small { color: #667a90; font-size: 10px; }
+.ttf-tree-leaves button em { flex: 0 0 auto; color: #4d6f91; font-size: 10px; font-style: normal; }
+.ttf-tree-detail { min-height: 58px; padding: 10px 12px; display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 12px; color: #5d6f85; background: #f8fafc; border: 1px solid #e5ebf2; border-top: 0; border-radius: 0 0 6px 6px; }
+.ttf-tree-detail strong { color: #273d56; font-size: 13px; }
+.ttf-tree-detail span { font-size: 11px; }
+.ttf-tree-detail small { color: #76869a; font-size: 10px; }
+.ttf-tree-empty { min-height: 100%; display: grid; place-items: center; align-content: center; gap: 12px; color: #5f7187; }
+.ttf-tree-empty button { min-height: 30px; padding: 0 12px; color: #1877ff; background: #fff; border: 1px solid #abc8eb; border-radius: 4px; }
 
 .ttf-report-workbench { display: grid; grid-template-columns: 360px 824px; gap: 16px; height: 876px; margin-top: 15px; }
 .ttf-recommend { padding: 20px 20px 16px; }
@@ -181,6 +212,30 @@
 .ttf-news-list footer { display: flex; gap: 18px; color: #97a1ac; font-size: 11px; }.ttf-news-list footer span{display:flex;align-items:center;gap:5px}
 .ttf-news-actions { position: absolute; right: 2px; bottom: 22px; display: flex; align-items: center; gap: 24px; color: #97a1ac; font-size: 11px; }.ttf-news-actions span{display:flex;align-items:center;gap:5px}.ttf-news-actions a{color:#1877ff;text-decoration:none}
 .ttf-view-all { display: table; margin: 20px auto 0; color: #1877ff; font-size: 13px; text-decoration: none; }
+
+/* Preserve the Figma composition while meeting body-copy contrast. */
+.ttf-mini-select,
+.ttf-mini-select small,
+.ttf-panel-title > span,
+.ttf-milestones article p,
+.ttf-milestones time,
+.ttf-tree-children span,
+.ttf-report-item footer,
+.ttf-bar-row > span,
+.ttf-city-bars footer,
+.ttf-city-selects > span,
+.ttf-institution li b,
+.ttf-news-list footer,
+.ttf-news-actions,
+.ttf-migration-timeline small,
+.ttf-stop-detail small,
+.ttf-paper-bars > div {
+  color: #5d6d80;
+}
+
+.ttf-line-chart text,
+.ttf-radar text,
+.ttf-career-radar text { fill: #5d6d80; }
 
 @media (max-width: 1500px) {
   .ttf-content,

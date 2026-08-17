@@ -60,6 +60,9 @@ import {
   type ReactNode,
 } from "react";
 import PortalHeader from "./PortalHeader";
+import { OneMapModule } from "./topic-modules/OneMapModule";
+import { PolicyModule } from "./topic-modules/PolicyModule";
+import { ServiceModule } from "./topic-modules/ServiceModule";
 import "./technology-topic-service.css";
 
 type ModuleId =
@@ -198,7 +201,7 @@ const moduleDefinitions: ModuleDefinition[] = [
   {
     id: "reports",
     label: "专题研究报告",
-    description: "按产业、时间和机构筛选并查看研究报告。",
+    description: "按产业、细分领域、时间范围与机构筛选并查看研究报告。",
     icon: FileText,
     subs: [
       { id: "report-catalog", label: "产研报告目录" },
@@ -253,6 +256,10 @@ function buildTopicUrl(route: TopicRoute) {
   url.searchParams.set("sub", route.sub);
   url.searchParams.set("industry", route.industry);
   return url;
+}
+
+function preferredScrollBehavior(): ScrollBehavior {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 }
 
 type FocusableElement = HTMLElement | SVGElement;
@@ -340,7 +347,7 @@ function WorldMap({ scope = "全球", label = "区域分布", pins = ["北美", 
   const positions = [[23, 38], [48, 34], [73, 45], [78, 59]];
   return <figure className="tp-world-map">
     <div className="tp-map-canvas">
-      <img src="/assets/thinktank-world-map.svg" alt="" />
+      <img src="./assets/thinktank-world-map.svg" alt="" />
       {pins.map((pin, index) => <span className="tp-map-pin" style={{ left: `${positions[index % positions.length][0]}%`, top: `${positions[index % positions.length][1]}%` }} key={pin}><i /><b>{pin}</b></span>)}
     </div>
     <figcaption><span>{scope} · {label}</span><small>位置与密度均为演示示意</small></figcaption>
@@ -416,7 +423,7 @@ function TopicDialog({ dialog, onClose }: { dialog: DialogState; onClose: () => 
 }
 
 function SourceLink({ href, children = "查看原始报道" }: { href?: string; children?: ReactNode }) {
-  if (!href) return <span className="tp-source-link is-disabled" aria-disabled="true">原始报道待接入</span>;
+  if (!href) return <span className="tp-source-link is-disabled" aria-disabled="true">暂无原文链接</span>;
   return <a className="tp-source-link" href={href} target="_blank" rel="noreferrer">{children}<ExternalLink size={14} aria-hidden="true" /></a>;
 }
 
@@ -1090,7 +1097,7 @@ function IndustryNews({ industry }: { industry: Industry }) {
           <div className="tp-news-meta"><span>{regions[index]}</span><small>{sources[index]} · 发布于 {dates[index]}</small></div>
           <h4>{title}</h4>
           <p>围绕{industry}的技术验证、产业协作与应用转化整理事件摘要；正式版本将保留原标题、原文地址与核验时间。</p>
-          <footer><small>最近核验：来源尚待接入</small><SourceLink /></footer>
+          <footer><small>数据来源：演示样本</small><SourceLink /></footer>
         </article>
       </li>)}
     </ol>
@@ -1114,7 +1121,7 @@ function RegionDistribution({ industry, profile }: { industry: Industry; profile
     <div className="tp-region-layout">
       <figure className={`tp-region-map is-${scope}`}>
         <div className="tp-region-map-canvas">
-          <img src="/assets/thinktank-world-map.svg" alt="" />
+          <img src="./assets/thinktank-world-map.svg" alt="" />
           {regions.map((item) => <button className={selected.name === item.name ? "active" : ""} type="button" style={{ left: `${item.x}%`, top: `${item.y}%` }} aria-pressed={selected.name === item.name} onClick={() => setSelectedRegion(item.name)} key={item.name}><i /><span>{item.name}<b>{item.total}</b></span></button>)}
         </div>
         <figcaption><span>{scope === "global" ? "全球" : "全国"}区域样本点位</span><small>点位与数量均为演示</small></figcaption>
@@ -1306,7 +1313,7 @@ function createRegionPoints(total: number, kind: "paper" | "patent"): RegionCoun
 function QuantifiedWorldMap({ label, unit, points, scopeLabel = "全球演示样本" }: { label: string; unit: string; points: RegionCountPoint[]; scopeLabel?: string }) {
   return <figure className="tp-world-map tp-quantified-map">
     <div className="tp-map-canvas">
-      <img src="/assets/thinktank-world-map.svg" alt="" />
+      <img src="./assets/thinktank-world-map.svg" alt="" />
       {points.map((point) => <span className="tp-map-pin" style={{ left: `${point.x}%`, top: `${point.y}%` }} key={point.name}><i /><b>{point.name}<small>{point.count.toLocaleString()} {unit}</small></b></span>)}
     </div>
     <figcaption><span>{scopeLabel} · {label}</span><small>区域数量为演示统计</small></figcaption>
@@ -1406,7 +1413,7 @@ function TechOverview({ industry }: { industry: Industry }) {
   const paperRegions = createRegionPoints(summary.papers, "paper");
   const patentRegions = createRegionPoints(summary.patents, "patent");
   return <div className="tp-frontier-overview">
-    <div className="tp-frontier-scope"><div><strong>{industry}总体技术概况</strong><span>覆盖技术链 {summary.nodes.length} 个节点</span></div><dl><div><dt>统计周期</dt><dd>2020—2025</dd></div><div><dt>统计范围</dt><dd>全球演示样本</dd></div><div><dt>数据状态</dt><dd>待接入正式数据</dd></div></dl></div>
+    <div className="tp-frontier-scope"><div><strong>{industry}总体技术概况</strong><span>覆盖技术链 {summary.nodes.length} 个节点</span></div><dl><div><dt>统计周期</dt><dd>2020—2025</dd></div><div><dt>统计范围</dt><dd>全球演示样本</dd></div><div><dt>数据状态</dt><dd>演示数据</dd></div></dl></div>
     <MetricStrip items={[
       { label: "论文数量", value: `${summary.papers.toLocaleString()} 篇`, note: `2025 年新增 ${paperSeries.at(-1)?.toLocaleString()} 篇`, icon: BookOpen },
       { label: "专利数量", value: `${summary.patents.toLocaleString()} 件`, note: `2025 年新增 ${patentSeries.at(-1)?.toLocaleString()} 件`, icon: FileText },
@@ -1702,7 +1709,7 @@ function EnterpriseEcosystem({ industry, companyName, openDialog }: { industry: 
       title: relation.name,
       label: `${relation.group} · 演示合作详情`,
       returnFocus: event.currentTarget,
-      body: <div className="tp-dialog-detail"><p>{relation.summary}</p><dl><div><dt>关系类型</dt><dd>{relation.group}</dd></div><div><dt>协同成果</dt><dd>{relation.outcome}</dd></div><div><dt>数据状态</dt><dd>正式合作与成果数据待接入</dd></div></dl><DemoBadge>合作对象与成果均为虚构样例</DemoBadge></div>,
+      body: <div className="tp-dialog-detail"><p>{relation.summary}</p><dl><div><dt>关系类型</dt><dd>{relation.group}</dd></div><div><dt>协同成果</dt><dd>{relation.outcome}</dd></div><div><dt>数据状态</dt><dd>演示关系</dd></div></dl><DemoBadge>合作对象与成果均为虚构样例</DemoBadge></div>,
     })} key={relation.name}><span>{relation.group}</span><strong>{relation.name}</strong></button>)}
   </div>;
 }
@@ -1737,15 +1744,15 @@ function StarEnterpriseShowcase({ industry, openDialog }: { industry: Industry; 
         const panelId = `tp-product-feature-panel-${industryIndex}-${index}`;
         return <section className={active ? "active" : ""} key={feature.title}>
           <button id={buttonId} type="button" aria-expanded={active} aria-controls={panelId} onClick={() => setActiveFeature((current) => current === index ? null : index)}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{feature.title}</strong><small>{feature.description}</small></div><ChevronDown size={17} aria-hidden="true" /></button>
-          {active && <div id={panelId} role="region" aria-labelledby={buttonId}><p>{feature.description}</p><ul>{feature.items.map((item) => <li key={item}><CheckCircle2 size={14} aria-hidden="true" />{item}</li>)}</ul>{feature.mediaPending && <div className="tp-media-placeholder"><Eye size={22} aria-hidden="true" /><strong>操作演示视频待接入</strong><small>待提供真实视频文件、封面和时长信息</small></div>}</div>}
+          {active && <div id={panelId} role="region" aria-labelledby={buttonId}><p>{feature.description}</p><ul>{feature.items.map((item) => <li key={item}><CheckCircle2 size={14} aria-hidden="true" />{item}</li>)}</ul>{feature.mediaPending && <div className="tp-media-placeholder"><Eye size={22} aria-hidden="true" /><strong>操作演示说明</strong><small>当前以使用场景与功能步骤进行展示</small></div>}</div>}
         </section>;
       })}</div>
     </Panel>
     <Panel title="技术优势展示结构" description="以专利数量、研发投入占比和底层架构预留技术优势可视化位置" action={<DemoBadge>指标为虚构演示</DemoBadge>}>
-      <div className="tp-tech-advantage-layout"><section><dl><div><dt>专利数量</dt><dd>{68 + industryIndex * 7} 件</dd><small>企业专利演示样本</small></div><div><dt>研发投入占比</dt><dd>{18 + industryIndex % 4 * 2}%</dd><small>年度营收演示口径</small></div></dl><div className="tp-tech-principle"><strong>算法与方法优势</strong><p>正式算法原理、评价指标和对比证据待接入。</p><strong>系统架构优势</strong><p>当前仅展示资源层—核心能力层—场景层的信息结构。</p></div></section><aside><Layers3 size={28} aria-hidden="true" /><strong>技术原理 3D 模型待接入</strong><p>当前尚未接入真实模型、材质和查看视角；素材补齐后可在此交互查看技术原理。</p></aside></div>
+      <div className="tp-tech-advantage-layout"><section><dl><div><dt>专利数量</dt><dd>{68 + industryIndex * 7} 件</dd><small>企业专利演示样本</small></div><div><dt>研发投入占比</dt><dd>{18 + industryIndex % 4 * 2}%</dd><small>年度营收演示口径</small></div></dl><div className="tp-tech-principle"><strong>算法与方法优势</strong><p>以演示指标和能力结构展示技术优势。</p><strong>系统架构优势</strong><p>当前展示资源层—核心能力层—场景层的信息结构。</p></div></section><aside><Layers3 size={28} aria-hidden="true" /><strong>技术原理结构示意</strong><p>以分层结构说明技术原理与能力关系。</p></aside></div>
     </Panel>
     <Panel title="团队实力多维展示" description="展示核心成员的专业领域、行业成就与主导项目" action={<DemoBadge>人物资料为虚构演示</DemoBadge>}>
-      <article className="tp-team-card tp-enterprise-team-card"><span><Users size={24} aria-hidden="true" /></span><div aria-live="polite"><small>{teamIndex + 1} / {teams.length} · {activeTeam.role}</small><h4>{activeTeam.name}</h4><dl><div><dt>专业领域</dt><dd>{activeTeam.expertise}</dd></div><div><dt>行业成就</dt><dd>{activeTeam.achievement}</dd></div><div><dt>主导项目</dt><dd>{activeTeam.project}</dd></div></dl><span className="tp-link-pending" aria-disabled="true">LinkedIn 链接待接入</span></div><nav aria-label="切换团队成员"><button type="button" disabled={teamIndex === 0} onClick={() => setTeamIndex((value) => Math.max(0, value - 1))} aria-label="上一位成员"><ChevronLeft size={17} /></button><button type="button" disabled={teamIndex === teams.length - 1} onClick={() => setTeamIndex((value) => Math.min(teams.length - 1, value + 1))} aria-label="下一位成员"><ChevronRight size={17} /></button></nav></article>
+      <article className="tp-team-card tp-enterprise-team-card"><span><Users size={24} aria-hidden="true" /></span><div aria-live="polite"><small>{teamIndex + 1} / {teams.length} · {activeTeam.role}</small><h4>{activeTeam.name}</h4><dl><div><dt>专业领域</dt><dd>{activeTeam.expertise}</dd></div><div><dt>行业成就</dt><dd>{activeTeam.achievement}</dd></div><div><dt>主导项目</dt><dd>{activeTeam.project}</dd></div></dl><span className="tp-link-pending" aria-disabled="true">演示人物不提供外部履历</span></div><nav aria-label="切换团队成员"><button type="button" disabled={teamIndex === 0} onClick={() => setTeamIndex((value) => Math.max(0, value - 1))} aria-label="上一位成员"><ChevronLeft size={17} /></button><button type="button" disabled={teamIndex === teams.length - 1} onClick={() => setTeamIndex((value) => Math.min(teams.length - 1, value + 1))} aria-label="下一位成员"><ChevronRight size={17} /></button></nav></article>
     </Panel>
     <Panel title="产业生态图谱" description="按上游协同、战略伙伴和下游应用展示合作网络" action={<DemoBadge>点击节点查看演示合作详情</DemoBadge>}>
       <EnterpriseEcosystem industry={industry} companyName={companyName} openDialog={openDialog} />
@@ -2404,123 +2411,300 @@ type ReportRecord = {
   id: string;
   title: string;
   industry: Industry;
-  year: string;
+  subfield: string;
   date: string;
   institution: string;
   summary: string;
+  scope: string;
+  method: string;
+  findings: string[];
+  recommendations: string[];
 };
 
 const reportRecords: ReportRecord[] = [
-  { id: "demo-1", title: "合成生物产业链与技术演进研究（演示报告）", industry: "合成生物", year: "2026", date: "2026-07-18", institution: "湾区未来产业研究中心（虚构）", summary: "围绕底盘细胞、工程验证和规模制造，展示产业链与技术链联合分析结构。" },
-  { id: "demo-2", title: "量子信息产业发展观察（演示报告）", industry: "量子信息", year: "2026", date: "2026-05-10", institution: "前沿科技战略研究室（虚构）", summary: "从关键器件、系统集成、企业梯队和科研协同四个维度展示专题分析方法。" },
-  { id: "demo-3", title: "空天技术企业与人才布局研究（演示报告）", industry: "空天技术", year: "2025", date: "2025-12-06", institution: "湾区未来产业研究中心（虚构）", summary: "展示商业航天产业链、企业空间布局与复合型人才结构的分析框架。" },
-  { id: "demo-4", title: "脑科学与类脑智能前沿趋势（演示报告）", industry: "脑科学与类脑智能", year: "2025", date: "2025-08-22", institution: "交叉科学与技术经济研究院（虚构）", summary: "聚焦脑机接口、类脑计算和神经调控，展示论文与专利趋势分析结构。" },
-  { id: "demo-5", title: "深地深海公共服务体系研究（演示报告）", industry: "深地深海", year: "2024", date: "2024-11-02", institution: "前沿科技战略研究室（虚构）", summary: "展示科研设施、工程服务、政策支持与区域协同的专题研究框架。" },
+  { id: "synbio-chassis", title: "底盘细胞工程化能力与产业协同研究（演示报告）", industry: "合成生物", subfield: "底盘细胞", date: "2026-07-18", institution: "湾区未来产业研究中心（虚构）", summary: "围绕底盘细胞设计、工程验证与规模制造，展示产业链和技术链联合研判结构。", scope: "覆盖菌种设计、自动化构建、发酵验证和下游应用四个环节，研究对象与数量均为演示样本。", method: "以演示产业链节点为骨架，综合论文、专利、企业和科研机构四类样例数据进行关联分析。", findings: ["工程验证节点连接技术成果与规模制造，是演示链条中的关键衔接环节。", "样例企业能力主要分布于底盘构建与小试验证，规模化服务环节相对集中。", "论文与专利主题在细胞工厂、代谢通路优化方向表现出较高关联度。"], recommendations: ["建立统一的底盘细胞能力描述字段，支持跨机构检索与比较。", "围绕工程验证节点组织可追溯的技术、企业和服务资源目录。", "正式研判应接入真实数据口径后再形成产业结论。"] },
+  { id: "synbio-manufacturing", title: "生物制造中试服务体系观察（演示报告）", industry: "合成生物", subfield: "生物制造", date: "2025-11-26", institution: "城市创新要素实验室（虚构）", summary: "从中试平台、工艺放大和质量验证三个维度呈现生物制造服务体系的分析方式。", scope: "以生物基材料和功能分子两个演示场景为对象，覆盖研发、中试和量产准备阶段。", method: "将服务机构能力标签映射至产业链环节，并使用演示项目记录观察跨环节协同关系。", findings: ["中试条件和质量验证能力决定演示项目从实验室走向制造端的连续性。", "不同应用方向对发酵规模、分离纯化与检测能力的组合要求存在差异。", "样例服务资源在共享规则和能力描述方面仍需要统一表达。"], recommendations: ["按工艺环节建立中试设施与服务能力目录。", "在正式系统中补充产能、设备和质量体系等可核验字段。", "避免在缺少真实项目数据时输出服务能力排名。"] },
+  { id: "blockchain-trusted-data", title: "可信数据流通基础设施研究（演示报告）", industry: "区块链", subfield: "可信数据流通", date: "2026-06-28", institution: "前沿科技战略研究室（虚构）", summary: "展示区块链在数据确权、流通记录和协同审计场景中的产业研究框架。", scope: "覆盖可信存证、数据授权、跨主体协同和审计追溯等演示环节。", method: "依据样例应用场景拆解功能节点，并关联技术能力、服务机构和政策条目。", findings: ["可信记录能力需要与身份、授权和审计机制共同形成完整流程。", "演示场景中跨主体规则一致性比单一链上性能更影响业务连续性。", "服务节点集中在平台建设，运营治理能力需要独立描述。"], recommendations: ["统一描述数据对象、授权边界和审计责任。", "为每个应用场景保留技术实现与治理规则两类证据。", "正式应用评价应使用经核验的运行数据。"] },
+  { id: "blockchain-privacy", title: "隐私计算协同应用路径分析（演示报告）", industry: "区块链", subfield: "隐私计算", date: "2025-09-12", institution: "交叉科学与技术经济研究院（虚构）", summary: "围绕多方安全计算、联邦学习与可信执行环境，呈现技术组合及应用边界。", scope: "选取科研协作与产业数据协同两个演示场景，关注数据可用不可见的流程设计。", method: "按数据进入、联合计算、结果输出和审计四个阶段组织样例技术节点。", findings: ["不同隐私计算路线对数据规模、实时性和可信假设的要求并不相同。", "样例项目常以组合技术满足安全、性能和治理的多重约束。", "技术指标需要与实际业务约束同时呈现才具备比较意义。"], recommendations: ["按场景记录数据规模、时效和安全假设。", "提供技术组合的适用边界说明而非单一优劣排序。", "接入真实测试结果后再形成路线选择建议。"] },
+  { id: "cell-gene-editing", title: "基因编辑工具链与转化环节研究（演示报告）", industry: "细胞与基因", subfield: "基因编辑", date: "2026-04-16", institution: "交叉科学与技术经济研究院（虚构）", summary: "梳理编辑工具、递送系统、效果评价和转化验证之间的演示技术链关系。", scope: "覆盖基础工具、递送载体、脱靶评估和验证服务四类演示节点。", method: "将论文与专利主题映射到技术链，并结合机构能力标签观察成果转化衔接。", findings: ["递送和安全评价是连接编辑工具与应用验证的关键演示节点。", "样例成果在工具研究端较丰富，在标准化评价字段上仍有信息缺口。", "不同应用对象对应的递送路线和评价重点差异明显。"], recommendations: ["按应用对象建立工具、递送和评价的组合视图。", "补充可追溯的实验条件与评价口径。", "正式报告不得以演示关联替代临床或监管结论。"] },
+  { id: "cell-therapy", title: "细胞治疗研发与产业化路径观察（演示报告）", industry: "细胞与基因", subfield: "细胞治疗", date: "2024-12-20", institution: "湾区未来产业研究中心（虚构）", summary: "从细胞制备、质量控制、临床转化和供应链保障呈现产业化路径分析结构。", scope: "以免疫细胞与干细胞两个演示方向为对象，覆盖研发至生产准备阶段。", method: "按流程节点汇总样例企业、科研机构、专利和服务能力，观察协作关系。", findings: ["质量控制贯穿样例流程，是研发、生产与转化之间的共同接口。", "冷链、耗材和检测服务构成细胞制备之外的重要保障节点。", "不同细胞类型的工艺和评价要求不能使用同一指标简单比较。"], recommendations: ["建立分细胞类型的流程与能力字段。", "在正式数据中区分研发状态、生产能力与转化进度。", "所有临床相关结论应由合规来源提供并审核。"] },
+  { id: "aerospace-commercial", title: "商业航天产业链协同能力研究（演示报告）", industry: "空天技术", subfield: "商业航天", date: "2026-03-08", institution: "湾区未来产业研究中心（虚构）", summary: "围绕卫星研制、发射服务、地面系统和运营应用展示产业链协同分析。", scope: "覆盖总体设计、关键部件、测试验证、发射与运营五类演示环节。", method: "使用演示企业与机构标签建立上下游连接，并按节点统计技术与服务样本。", findings: ["测试验证贯穿研制与发射准备，是演示链条中的高连接度节点。", "样例企业在部件和应用端分布较多，系统级协同需要进一步记录。", "产业链评价需要同时关注交付能力、可靠性与任务经验。"], recommendations: ["统一部件、系统和任务层级的能力描述。", "为关键节点补充供应关系和验证证据。", "正式产业判断需接入真实任务与交付数据。"] },
+  { id: "aerospace-satellite", title: "卫星应用场景与数据服务观察（演示报告）", industry: "空天技术", subfield: "卫星应用", date: "2025-07-04", institution: "城市创新要素实验室（虚构）", summary: "以遥感、通信和导航增强为样例，展示卫星数据从获取到行业应用的服务链。", scope: "覆盖数据获取、处理、产品生成、行业交付和持续服务等演示阶段。", method: "按应用场景关联数据产品、算法能力、服务机构与用户需求标签。", findings: ["数据处理与行业知识结合决定演示产品能否形成稳定服务。", "不同场景对时效、精度和覆盖范围的需求差异显著。", "样例资源需要补充数据来源、更新频率和质量说明。"], recommendations: ["按场景明确数据质量、时效和服务边界。", "建立原始数据到应用产品的可追溯关系。", "正式服务能力应以可核验合同或运行记录为依据。"] },
+  { id: "brain-interface", title: "脑机接口技术与应用生态研究（演示报告）", industry: "脑科学与类脑智能", subfield: "脑机接口", date: "2026-02-21", institution: "交叉科学与技术经济研究院（虚构）", summary: "聚焦信号采集、编解码、反馈控制和应用验证，呈现技术链与生态协同关系。", scope: "覆盖非侵入式与侵入式两个演示方向，内容不涉及医疗效果判断。", method: "将演示论文、专利、机构和企业映射至技术环节，观察节点连接和主题变化。", findings: ["信号质量与解码算法共同影响演示系统的稳定性和适用场景。", "应用验证需要硬件、算法与领域团队形成持续协同。", "不同技术路线的安全、精度和使用条件不可直接横向替代。"], recommendations: ["按技术路线分别展示采集方式、评价指标和适用边界。", "为应用验证保留数据来源与实验条件说明。", "医疗相关信息必须以合规审核材料为准。"] },
+  { id: "brain-inspired", title: "类脑计算软硬件协同趋势观察（演示报告）", industry: "脑科学与类脑智能", subfield: "类脑计算", date: "2024-10-18", institution: "前沿科技战略研究室（虚构）", summary: "从神经形态器件、计算架构、算法模型和应用验证展示技术发展分析框架。", scope: "覆盖感知、计算与控制三个演示应用方向，关注软硬件协同关系。", method: "依据样例技术主题建立分层技术链，并对论文、专利和机构主体进行标签统计。", findings: ["器件、架构和算法之间的协同影响演示技术路线的整体表现。", "样例成果集中于局部能力验证，跨层评价字段仍不完整。", "能效、精度和延迟需要在同一使用场景下解释。"], recommendations: ["构建跨器件、架构和算法的统一指标说明。", "在正式系统中保留测试场景与数据集信息。", "避免脱离应用边界形成性能优劣结论。"] },
+  { id: "deepsea-equipment", title: "深海装备技术链与保障体系研究（演示报告）", industry: "深地深海", subfield: "深海装备", date: "2026-01-09", institution: "前沿科技战略研究室（虚构）", summary: "围绕探测载荷、耐压结构、能源通信和海试保障展示装备技术链。", scope: "覆盖观测、采样、作业和保障四类演示任务，不代表真实装备性能。", method: "按任务流程关联技术节点、科研机构、企业与公共试验服务样本。", findings: ["海试与环境验证是连接样机研发和任务应用的重要演示节点。", "能源、通信和耐压能力在多个任务场景中形成共同依赖。", "装备信息需要区分研究样机、工程样机和任务运行状态。"], recommendations: ["按任务类型建立装备能力和验证记录。", "补充试验条件、运行深度等可核验元数据。", "正式性能评价应来源于授权测试记录。"] },
+  { id: "deepearth-detection", title: "深地探测设施与数据协同观察（演示报告）", industry: "深地深海", subfield: "深地探测", date: "2025-05-30", institution: "城市创新要素实验室（虚构）", summary: "展示深地观测、实验设施、数据处理和科研协作的资源组织方式。", scope: "覆盖地球物理观测、深部取样、实验模拟和数据计算四类演示资源。", method: "以设施和数据资源为节点，关联样例团队、技术主题和共享服务。", findings: ["大型设施与数据平台共同构成跨团队协作的基础资源。", "样例数据在空间、时间和采集方法上的描述需要保持一致。", "资源共享状态与科研产出不能简单视为直接因果。"], recommendations: ["建立设施、样本和数据集之间的追溯关系。", "按授权范围呈现资源可用状态。", "使用真实项目数据前不输出产出效果判断。"] },
+  { id: "vlc-communication", title: "可见光通信系统与场景适配研究（演示报告）", industry: "可见光通信与光计算", subfield: "可见光通信", date: "2025-03-14", institution: "湾区未来产业研究中心（虚构）", summary: "从光源器件、调制接收、网络控制和场景应用展示可见光通信技术链。", scope: "选取室内组网与特定环境通信两个演示场景，关注系统集成约束。", method: "按系统组成关联样例专利、论文、机构与企业能力，并记录场景指标。", findings: ["光源、接收和控制协议之间的匹配影响演示系统整体表现。", "不同场景对照明兼容、遮挡和移动性的要求存在明显差异。", "样例数据需要统一测试距离、环境与吞吐量口径。"], recommendations: ["以应用场景组织器件和系统指标。", "保留测试环境与系统配置以支持结果追溯。", "正式对比应基于同条件的权威测试数据。"] },
+  { id: "optical-computing", title: "光计算芯片技术路线观察（演示报告）", industry: "可见光通信与光计算", subfield: "光计算芯片", date: "2024-08-09", institution: "交叉科学与技术经济研究院（虚构）", summary: "围绕光电器件、计算架构、封装测试和软件工具展示技术路线研究框架。", scope: "覆盖矩阵计算与光电融合两个演示方向，关注器件到系统的协同环节。", method: "依据样例论文和专利主题构建技术链，并标注机构与企业的能力位置。", findings: ["器件一致性、封装和控制软件共同影响演示系统的可扩展性。", "不同架构的精度、能效和适用任务需要在同一条件下描述。", "样例成果多位于原理验证阶段，产业化状态字段仍需补充。"], recommendations: ["按器件、芯片、系统和软件分层管理技术信息。", "明确测试任务、精度与功耗等指标口径。", "不以演示样本推导产业成熟度结论。"] },
+  { id: "quantum-computing", title: "量子计算软硬件生态发展观察（演示报告）", industry: "量子信息", subfield: "量子计算", date: "2026-05-10", institution: "前沿科技战略研究室（虚构）", summary: "从关键器件、整机系统、开发工具和应用探索四个维度展示专题分析方法。", scope: "覆盖超导与光量子两个演示方向，不对具体路线作性能排名。", method: "将样例论文、专利、企业和科研机构映射至技术层级，观察协作与能力缺口。", findings: ["关键器件、控制系统和软件工具之间存在明显的跨层依赖。", "样例主体在基础研究和工具开发环节形成不同能力组合。", "量子比特规模不能脱离保真度、连接和任务条件单独解释。"], recommendations: ["建立分路线、分层级的技术与主体目录。", "为性能数据保留测试条件和来源信息。", "正式路线研判应由经核验的多指标数据支撑。"] },
+  { id: "quantum-communication", title: "量子通信网络与器件协同研究（演示报告）", industry: "量子信息", subfield: "量子通信", date: "2024-06-21", institution: "城市创新要素实验室（虚构）", summary: "梳理量子光源、探测器、密钥系统和网络运维之间的演示产业关系。", scope: "覆盖城域与跨域两个演示网络场景，关注器件、系统和运行服务。", method: "按网络层级组织样例技术节点，并关联企业、机构与政策支持信息。", findings: ["器件稳定性与网络运维共同影响演示系统的持续可用性。", "城域和跨域场景对链路、节点与管理能力的要求不同。", "样例网络信息需要区分试验、示范与常态运行状态。"], recommendations: ["按网络场景建立器件与运行指标。", "保留建设状态、运行周期和数据来源字段。", "未接入真实运行数据前不形成网络能力评价。"] },
 ];
 
 function downloadDemoReport(report: ReportRecord) {
-  const content = `${report.title}\n\n产业类型：${report.industry}\n发布时间：${report.date}\n研究机构：${report.institution}\n\n摘要：${report.summary}\n\n本文件仅用于演示专题研究报告下载流程，不是正式研究成果。`;
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const content = [
+    `# ${report.title}`,
+    "",
+    "> 本文件为虚构演示内容，仅用于展示专题研究报告查看与保存流程，不是正式研究成果。",
+    "",
+    "## 报告信息",
+    `- 产业类型：${report.industry}`,
+    `- 细分领域：${report.subfield}`,
+    `- 发布时间：${report.date}`,
+    `- 研究机构：${report.institution}`,
+    "",
+    "## 报告摘要",
+    report.summary,
+    "",
+    "## 研究范围与方法",
+    `${report.scope}\n\n${report.method}`,
+    "",
+    "## 关键发现",
+    ...report.findings.map((item) => `- ${item}`),
+    "",
+    "## 研究建议",
+    ...report.recommendations.map((item) => `- ${item}`),
+  ].join("\n");
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `${report.title.replace(/[\\/:*?\"<>|]/g, "-")}.txt`;
+  anchor.download = `${report.title.replace(/[\\/:*?\"<>|]/g, "-")}.md`;
+  document.body.append(anchor);
   anchor.click();
+  anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 500);
 }
 
-function ReportList({ reports, onOpen, onDownload }: { reports: ReportRecord[]; onOpen: (report: ReportRecord) => void; onDownload: (report: ReportRecord) => void }) {
-  if (!reports.length) return <div className="tp-empty-state"><FileSearch2 size={30} /><strong>未找到匹配的演示报告</strong><p>请调整产业、发布时间或研究机构筛选条件。</p></div>;
+function ReportList({ reports, selectedReportId, onOpen, onDownload }: { reports: ReportRecord[]; selectedReportId: string; onOpen: (report: ReportRecord) => void; onDownload: (report: ReportRecord) => void }) {
+  if (!reports.length) return <div className="tp-empty-state"><FileSearch2 size={30} /><strong>未找到匹配的演示报告</strong><p>请调整产业、细分领域、日期范围或研究机构。</p></div>;
   return <ol className="tp-report-list">
-    {reports.map((report) => <li key={report.id}>
-      <time dateTime={report.date}><span>{report.date.slice(5, 7)}</span><b>{report.date.slice(8, 10)}</b><small>{report.year}</small></time>
-      <article><div><span>{report.industry}</span><small>{report.institution}</small><DemoBadge /></div><h4>{report.title}</h4><p>{report.summary}</p></article>
-      <div className="tp-report-actions"><button type="button" onClick={() => onOpen(report)}><Eye size={16} />在线查看</button><button type="button" onClick={() => onDownload(report)}><Download size={16} />下载演示文本</button></div>
+    {reports.map((report) => <li className={selectedReportId === report.id ? "is-selected" : ""} key={report.id}>
+      <time dateTime={report.date}><span>{report.date.slice(5, 7)}</span><b>{report.date.slice(8, 10)}</b><small>{report.date.slice(0, 4)}</small></time>
+      <article><div><span>{report.industry}</span><span>{report.subfield}</span><small>{report.institution}</small></div><h4>{report.title}</h4><p>{report.summary}</p></article>
+      <div className="tp-report-actions"><button className="tp-report-open" type="button" aria-current={selectedReportId === report.id ? "true" : undefined} onClick={() => onOpen(report)}><Eye size={16} />{selectedReportId === report.id ? "正在阅读" : "在线查看"}</button><button type="button" onClick={() => onDownload(report)}><Download size={16} />下载演示报告</button></div>
     </li>)}
   </ol>;
 }
 
-function ReportsContent({ subId, industry, openDialog, showToast }: { subId: string; industry: Industry; openDialog: (dialog: DialogState) => void; showToast: (message: string) => void }) {
+function ReportReader({ report, onDownload }: { report: ReportRecord; onDownload: (report: ReportRecord) => void }) {
+  const sectionIds = {
+    summary: `tp-report-${report.id}-summary`,
+    scope: `tp-report-${report.id}-scope`,
+    findings: `tp-report-${report.id}-findings`,
+    recommendations: `tp-report-${report.id}-recommendations`,
+  };
+  return <article className="tp-report-reader">
+    <header className="tp-report-document-header">
+      <div><span>{report.industry} · {report.subfield}</span><h4>{report.title}</h4><p>{report.summary}</p></div>
+      <DemoBadge>虚构演示内容</DemoBadge>
+    </header>
+    <dl className="tp-report-metadata"><div><dt>产业类型</dt><dd>{report.industry}</dd></div><div><dt>细分领域</dt><dd>{report.subfield}</dd></div><div><dt>发布时间</dt><dd>{report.date}</dd></div><div><dt>研究机构</dt><dd>{report.institution}</dd></div></dl>
+    <div className="tp-report-reading-layout">
+      <nav aria-label="报告内容目录"><strong>报告目录</strong><a href={`#${sectionIds.summary}`}>报告摘要</a><a href={`#${sectionIds.scope}`}>研究范围与方法</a><a href={`#${sectionIds.findings}`}>关键发现</a><a href={`#${sectionIds.recommendations}`}>研究建议</a></nav>
+      <div className="tp-report-body">
+        <section id={sectionIds.summary}><h5>报告摘要</h5><p>{report.summary}</p></section>
+        <section id={sectionIds.scope}><h5>研究范围与方法</h5><p>{report.scope}</p><p>{report.method}</p></section>
+        <section id={sectionIds.findings}><h5>关键发现</h5><ol>{report.findings.map((item) => <li key={item}>{item}</li>)}</ol></section>
+        <section id={sectionIds.recommendations}><h5>研究建议</h5><ol>{report.recommendations.map((item) => <li key={item}>{item}</li>)}</ol></section>
+      </div>
+    </div>
+    <footer><p>页面正文与下载文件使用同一份演示内容。</p><button className="tp-primary-button" type="button" onClick={() => onDownload(report)}><Download size={16} />下载当前演示报告</button></footer>
+  </article>;
+}
+
+function ReportsContent({ subId, industry, selectedReportId, onSelectReport, showToast }: { subId: string; industry: Industry; selectedReportId: string; onSelectReport: (reportId: string) => void; showToast: (message: string) => void }) {
   const [industryFilter, setIndustryFilter] = useState<string>(industry);
-  const [year, setYear] = useState("全部时间");
+  const [subfield, setSubfield] = useState("全部细分领域");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [institution, setInstitution] = useState("全部机构");
   const institutions = Array.from(new Set(reportRecords.map((item) => item.institution)));
-  const filtered = reportRecords.filter((report) => (industryFilter === "全部产业" || report.industry === industryFilter) && (year === "全部时间" || report.year === year) && (institution === "全部机构" || report.institution === institution));
-  const openReport = (report: ReportRecord) => openDialog({
-    title: report.title,
-    label: "专题研究报告 · 在线查看",
-    body: <article className="tp-report-reader">
-      <dl><div><dt>产业类型</dt><dd>{report.industry}</dd></div><div><dt>发布时间</dt><dd>{report.date}</dd></div><div><dt>研究机构</dt><dd>{report.institution}</dd></div></dl>
-      <DemoBadge>以下内容为演示报告结构</DemoBadge>
-      <section><h3>报告摘要</h3><p>{report.summary}</p></section><section><h3>产业发展方向</h3><p>正式报告将根据接入的产业研究成果呈现研究范围、分析方法与发展方向。</p></section><section><h3>分析内容</h3><p>此处用于承载产业链、技术链、企业、科研、人才、服务与政策等分析内容。</p></section><section><h3>研究建议</h3><p>正式建议需由研究机构提供并经过发布流程审核，演示版本不形成决策结论。</p></section>
-      <button className="tp-primary-button" type="button" onClick={() => { downloadDemoReport(report); showToast("演示文本已开始下载"); }}><Download size={16} />下载演示文本</button>
-    </article>,
-  });
-  if (subId === "report-view") return <Panel title="产研报告查看保存" description="选择报告后在线浏览，并下载至本地保存" action={<DemoBadge>演示报告，不是正式成果</DemoBadge>}><ReportList reports={reportRecords.slice(0, 3)} onOpen={openReport} onDownload={(report) => { downloadDemoReport(report); showToast("演示文本已开始下载"); }} /></Panel>;
-  return <Panel title="产研报告目录" description="按产业类型、发布时间和研究机构筛选" action={<DemoBadge>目录内容为演示</DemoBadge>}>
+  const subfields = Array.from(new Set(reportRecords.filter((item) => industryFilter === "全部产业" || item.industry === industryFilter).map((item) => item.subfield)));
+  const dateRangeError = Boolean(startDate && endDate && startDate > endDate);
+  const filtered = dateRangeError ? [] : reportRecords
+    .filter((report) => (industryFilter === "全部产业" || report.industry === industryFilter)
+      && (subfield === "全部细分领域" || report.subfield === subfield)
+      && (!startDate || report.date >= startDate)
+      && (!endDate || report.date <= endDate)
+      && (institution === "全部机构" || report.institution === institution))
+    .sort((left, right) => right.date.localeCompare(left.date));
+  const download = (report: ReportRecord) => { downloadDemoReport(report); showToast("演示报告文件已开始下载"); };
+  const selectedReport = reportRecords.find((report) => report.id === selectedReportId) ?? reportRecords[0];
+  if (subId === "report-view") return <Panel title="产研报告查看保存" description="在线浏览当前报告，并将相同内容下载至本地保存" action={<DemoBadge>演示报告，不是正式成果</DemoBadge>}><ReportReader report={selectedReport} onDownload={download} /></Panel>;
+  return <Panel title="产研报告目录" description="按产业类型、细分领域、发布时间范围和研究机构筛选" action={<DemoBadge>目录内容为演示</DemoBadge>}>
     <form className="tp-report-filters" onSubmit={(event) => event.preventDefault()}>
-      <label><span>产业类型</span><select value={industryFilter} onChange={(event) => setIndustryFilter(event.target.value)}><option>全部产业</option>{industries.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
-      <label><span>发布时间</span><select value={year} onChange={(event) => setYear(event.target.value)}><option>全部时间</option><option>2026</option><option>2025</option><option>2024</option></select><ChevronDown size={15} /></label>
+      <label><span>产业类型</span><select value={industryFilter} onChange={(event) => { setIndustryFilter(event.target.value); setSubfield("全部细分领域"); }}><option>全部产业</option>{industries.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
+      <label><span>细分领域</span><select value={subfield} onChange={(event) => setSubfield(event.target.value)}><option>全部细分领域</option>{subfields.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
       <label><span>研究机构</span><select value={institution} onChange={(event) => setInstitution(event.target.value)}><option>全部机构</option>{institutions.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
-      <button type="button" onClick={() => { setIndustryFilter("全部产业"); setYear("全部时间"); setInstitution("全部机构"); }}><RotateCcw size={15} />重置</button>
+      <label className="tp-report-date-field"><span>开始日期</span><input type="date" value={startDate} max={endDate || undefined} onInput={(event) => setStartDate(event.currentTarget.value)} onChange={(event) => setStartDate(event.target.value)} aria-label="报告发布时间开始日期" /></label>
+      <label className="tp-report-date-field"><span>结束日期</span><input type="date" value={endDate} min={startDate || undefined} onInput={(event) => setEndDate(event.currentTarget.value)} onChange={(event) => setEndDate(event.target.value)} aria-label="报告发布时间结束日期" /></label>
+      <button type="button" onClick={() => { setIndustryFilter("全部产业"); setSubfield("全部细分领域"); setStartDate(""); setEndDate(""); setInstitution("全部机构"); }}><RotateCcw size={15} />重置筛选</button>
+      {dateRangeError && <p className="tp-report-filter-error" role="alert"><CircleAlert size={15} />开始日期不能晚于结束日期，请重新选择。</p>}
     </form>
-    <div className="tp-result-summary"><span>当前找到 <strong>{filtered.length}</strong> 份演示报告</span><small>默认按发布时间倒序</small></div>
-    <ReportList reports={filtered} onOpen={openReport} onDownload={(report) => { downloadDemoReport(report); showToast("演示文本已开始下载"); }} />
+    <div className="tp-result-summary"><span>当前找到 <strong>{filtered.length}</strong> 份演示报告</span><small>按完整发布日期倒序</small></div>
+    <ReportList reports={filtered} selectedReportId={selectedReportId} onOpen={(report) => onSelectReport(report.id)} onDownload={download} />
   </Panel>;
 }
 
-type FeedbackRecord = { id: number; subject: string; content: string; status: string; date: string; unread: boolean; reply: string };
+type PlatformNoticeType = "维护通知" | "版本介绍" | "运营公告";
+type PlatformNoticeRecord = { id: string; type: PlatformNoticeType; date: string; title: string; summary: string; detail: string; scope: string };
+type FeedbackAttachment = { id: string; name: string; size: number };
+type FeedbackRecord = { id: number; category: string; subject: string; content: string; status: string; date: string; unread: boolean; reply: string; attachments: string[] };
 
-function PlatformContent({ subId, showToast }: { subId: string; showToast: (message: string) => void }) {
+const platformDataVolumes = [
+  { label: "产业", value: 29.8 }, { label: "技术", value: 24.6 }, { label: "企业", value: 21.9 }, { label: "科研机构", value: 16.4 },
+  { label: "人才", value: 14.7 }, { label: "服务机构", value: 11.8 }, { label: "政策", value: 15.1 }, { label: "研究报告", value: 8.6 },
+];
+
+const platformDataFormats = [
+  { label: "结构化数据表", value: 32, color: "#1769cc" }, { label: "知识图谱", value: 18, color: "#337fc7" },
+  { label: "统计图表", value: 16, color: "#4f92c0" }, { label: "空间地图", value: 14, color: "#62a2b7" },
+  { label: "研究报告", value: 12, color: "#7ab2ba" }, { label: "资讯文本", value: 8, color: "#9ac4c2" },
+];
+
+const platformNotices: PlatformNoticeRecord[] = [
+  { id: "notice-maintenance", type: "维护通知", date: "2026-08-15", title: "专题图谱服务维护说明（演示）", summary: "展示计划维护公告的影响范围、时间和用户操作说明。", detail: "演示维护窗口为 2026-08-20 22:00—23:30，期间产业链与技术链图谱可能短时不可用，其余浏览与检索功能保持开放。", scope: "产业链全景、未来产业技术链全景" },
+  { id: "notice-release", type: "版本介绍", date: "2026-08-10", title: "科技专题服务功能更新（演示）", summary: "新增报告细分领域与日期范围筛选，完善在线阅读和保存流程。", detail: "本条用于展示版本公告的内容结构，包括更新范围、操作变化和注意事项，不代表正式版本发布记录。", scope: "专题研究报告、平台介绍" },
+  { id: "notice-data", type: "运营公告", date: "2026-08-06", title: "演示数据口径说明", summary: "页面数据、对象、排序和结论均用于功能演示，不构成正式研判。", detail: "产业名称来自已确认范围；数量、机构、人物、公告和报告正文均为虚构演示内容。正式使用时应同步展示来源、统计周期与更新说明。", scope: "科技专题服务全部模块" },
+  { id: "notice-guide", type: "运营公告", date: "2026-07-28", title: "专题服务使用指引（演示）", summary: "说明从专题产业选择到模块筛选、内容定位和报告保存的基本路径。", detail: "先在页面顶部选择专题产业，再从左侧功能目录进入业务模块；模块内容在中间平铺展示，可使用右侧定位器快速到达具体区块。", scope: "页面导航与操作" },
+];
+
+const defaultFeedbackRecords: FeedbackRecord[] = [
+  { id: 1, category: "数据问题", subject: "数据字段说明咨询（演示）", content: "请说明专题指标的统计周期、来源字段和更新时间。", status: "已回复", date: "2026-08-08", unread: true, reply: "演示回复：正式指标将同时展示来源、统计周期与更新时间；当前页面数据均为演示。", attachments: ["指标字段截图.png"] },
+  { id: 2, category: "功能建议", subject: "报告筛选方式建议（演示）", content: "建议报告目录支持细分领域和日期范围组合筛选。", status: "已回复", date: "2026-08-02", unread: false, reply: "演示回复：报告目录已增加细分领域与起止日期筛选。", attachments: [] },
+];
+
+const feedbackStorageKey = "gkx-platform-feedback-demo-v1";
+
+function formatAttachmentSize(size: number) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function readFeedbackRecords() {
+  try {
+    const stored = window.sessionStorage.getItem(feedbackStorageKey);
+    const parsed = stored ? JSON.parse(stored) : null;
+    return Array.isArray(parsed) ? parsed as FeedbackRecord[] : defaultFeedbackRecords;
+  } catch {
+    return defaultFeedbackRecords;
+  }
+}
+
+function PlatformDataContent() {
+  return <>
+    <MetricStrip items={[
+      { label: "数据类目", value: "8 类", note: "产业至研究报告", icon: Layers3 },
+      { label: "演示数据体量", value: "142.9 万条", note: "非正式统计", icon: Database },
+      { label: "内容形式", value: "6 种", note: "数据表、图谱、地图等", icon: BarChart3 },
+      { label: "服务模块", value: "11 项", note: "覆盖浏览、分析与反馈", icon: ShieldCheck },
+    ]} />
+    <div className="tp-platform-data-grid">
+      <Panel title="数据类目与体量" description="八类演示数据的样本量级，不代表正式平台存量">
+        <figure className="tp-platform-volume-chart" aria-label="八类演示数据体量条形图"><figcaption><span>演示数据样本量</span><small>单位：万条</small></figcaption><ol>{platformDataVolumes.map((item) => <li key={item.label}><span>{item.label}</span><div><i style={{ "--tp-platform-volume": `${item.value / 29.8 * 100}%` } as CSSProperties} /></div><strong>{item.value}</strong></li>)}</ol></figure>
+      </Panel>
+      <Panel title="数据形式构成" description="同一数据对象可通过多种形式组织与呈现">
+        <figure className="tp-platform-format-chart" aria-label="六种数据形式构成图"><div className="tp-platform-format-strip">{platformDataFormats.map((item) => <i title={`${item.label} ${item.value}%`} style={{ "--tp-format-width": `${item.value}%`, "--tp-format-color": item.color } as CSSProperties} key={item.label} />)}</div><figcaption><ul>{platformDataFormats.map((item) => <li key={item.label}><i style={{ "--tp-format-color": item.color } as CSSProperties} /><span>{item.label}</span><strong>{item.value}%</strong></li>)}</ul></figcaption></figure>
+      </Panel>
+    </div>
+    <Panel title="数据服务方式" description="数据类目、内容形式与平台功能之间的服务关系">
+      <div className="tp-platform-service-table"><table><thead><tr><th>服务方式</th><th>主要数据</th><th>页面能力</th></tr></thead><tbody><tr><td>专题浏览</td><td>产业、技术、企业、科研、人才</td><td>概况、趋势、分布与图谱</td></tr><tr><td>空间研判</td><td>企业、科研、人才、政策</td><td>专题地图、行政区切换与定位</td></tr><tr><td>研究检索</td><td>资讯、政策、研究报告</td><td>组合筛选、全文检索与在线阅读</td></tr><tr><td>用户协作</td><td>问题、建议、附件与回复</td><td>咨询提交、反馈记录与新回复提醒</td></tr></tbody></table><DemoBadge>内容与体量均为演示</DemoBadge></div>
+    </Panel>
+  </>;
+}
+
+function PlatformNoticeContent() {
+  const [noticeFilter, setNoticeFilter] = useState<"全部公告" | PlatformNoticeType>("全部公告");
+  const [expandedNoticeId, setExpandedNoticeId] = useState(platformNotices[0].id);
+  const visibleNotices = noticeFilter === "全部公告" ? platformNotices : platformNotices.filter((notice) => notice.type === noticeFilter);
+  return <Panel title="平台通知公告" description="系统维护、版本介绍等公告由平台运营人员发布" action={<DemoBadge>公告内容为演示</DemoBadge>}>
+    <div className="tp-notice-toolbar" role="group" aria-label="公告类型筛选">{(["全部公告", "维护通知", "版本介绍", "运营公告"] as const).map((type) => <button className={noticeFilter === type ? "active" : ""} type="button" aria-pressed={noticeFilter === type} onClick={() => { setNoticeFilter(type); setExpandedNoticeId(""); }} key={type}>{type}<span>{type === "全部公告" ? platformNotices.length : platformNotices.filter((notice) => notice.type === type).length}</span></button>)}</div>
+    <ol className="tp-notice-list">{visibleNotices.map((notice) => { const expanded = expandedNoticeId === notice.id; return <li className={expanded ? "is-expanded" : ""} key={notice.id}><button type="button" aria-expanded={expanded} aria-controls={`tp-notice-detail-${notice.id}`} onClick={() => setExpandedNoticeId(expanded ? "" : notice.id)}><time dateTime={notice.date}>{notice.date}</time><span><small>{notice.type}</small><strong>{notice.title}</strong><p>{notice.summary}</p></span><ChevronRight size={17} aria-hidden="true" /></button>{expanded && <div id={`tp-notice-detail-${notice.id}`} className="tp-notice-detail" role="region" aria-label={`${notice.title}详情`}><p>{notice.detail}</p><dl><div><dt>影响范围</dt><dd>{notice.scope}</dd></div><div><dt>公告性质</dt><dd>虚构演示公告</dd></div></dl></div>}</li>; })}</ol>
+  </Panel>;
+}
+
+function PlatformFeedbackContent({ showToast }: { showToast: (message: string) => void }) {
+  const [feedbackCategory, setFeedbackCategory] = useState("数据问题");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
-  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<FeedbackAttachment[]>([]);
   const [feedbackError, setFeedbackError] = useState("");
-  const [records, setRecords] = useState<FeedbackRecord[]>([
-    { id: 1, subject: "数据字段说明咨询（演示）", content: "请说明专题指标更新时间。", status: "已回复", date: "2026-08-08", unread: true, reply: "演示回复：正式更新时间将在数据接入后公布。" },
-  ]);
+  const [feedbackFilter, setFeedbackFilter] = useState<"全部记录" | "新回复">("全部记录");
+  const [records, setRecords] = useState<FeedbackRecord[]>(readFeedbackRecords);
+  const newReplyCount = records.filter((record) => record.unread).length;
+  const visibleRecords = feedbackFilter === "全部记录" ? records : records.filter((record) => record.unread);
+  useEffect(() => {
+    try { window.sessionStorage.setItem(feedbackStorageKey, JSON.stringify(records)); } catch { /* Session persistence is best-effort. */ }
+  }, [records]);
+  const handleAttachmentFiles = (files: FileList | null) => {
+    const selectedFiles = Array.from(files ?? []);
+    if (!selectedFiles.length) return;
+    if (attachments.length + selectedFiles.length > 5) {
+      setFeedbackError("最多添加 5 个附件，请移除部分文件后重试。");
+      return;
+    }
+    const invalidFile = selectedFiles.find((file) => !(file.type.startsWith("image/") || /\.(pdf|docx?|txt)$/i.test(file.name)));
+    if (invalidFile) {
+      setFeedbackError(`“${invalidFile.name}”格式不支持，请选择图片、PDF、Word 或 TXT 文件。`);
+      return;
+    }
+    const oversizedFile = selectedFiles.find((file) => file.size > 10 * 1024 * 1024);
+    if (oversizedFile) {
+      setFeedbackError(`“${oversizedFile.name}”超过 10 MB，请压缩后重试。`);
+      return;
+    }
+    setAttachments((current) => [...current, ...selectedFiles.map((file) => ({ id: `${file.name}-${file.size}-${file.lastModified}`, name: file.name, size: file.size }))].filter((item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index));
+    setFeedbackError("");
+  };
   const submitFeedback = (event: FormEvent) => {
     event.preventDefault();
     if (!subject.trim() || !content.trim()) {
       setFeedbackError("请填写咨询主题和咨询内容后再提交。");
       return;
     }
-    setRecords((current) => [{ id: Date.now(), subject: subject.trim(), content: content.trim(), status: "已提交", date: "2026-08-12", unread: false, reply: "等待运营团队回复" }, ...current]);
-    setSubject(""); setContent(""); setAttachments([]); setFeedbackError("");
-    showToast("演示咨询已加入反馈记录");
+    if (content.trim().length < 10) {
+      setFeedbackError("咨询内容至少需要 10 个字，请补充问题背景或改进建议。");
+      return;
+    }
+    setRecords((current) => [{ id: Date.now(), category: feedbackCategory, subject: subject.trim(), content: content.trim(), status: "本次会话已记录", date: new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Shanghai" }), unread: false, reply: "", attachments: attachments.map((item) => item.name) }, ...current]);
+    setSubject(""); setContent(""); setAttachments([]); setFeedbackError(""); setFeedbackFilter("全部记录");
+    showToast("咨询已加入本次演示反馈记录");
   };
-  if (subId === "platform-data") return <>
-    <MetricStrip items={[
-      { label: "数据类目", value: "8 类", note: "演示分类", icon: Layers3 },
-      { label: "内容形式", value: "6 种", note: "图谱、图表、地图等", icon: Database },
-      { label: "空间层级", value: "5 级", note: "全球至深圳行政区", icon: Globe2 },
-      { label: "服务模块", value: "11 项", note: "标书明确功能", icon: ShieldCheck },
-    ]} />
-    <div className="tp-two-column"><Panel title="数据类目构成" description="演示类目，不代表正式体量"><BarBreakdown items={[{ label: "产业与技术", value: 82 }, { label: "企业与科研", value: 68 }, { label: "人才与服务", value: 57 }, { label: "政策与报告", value: 49 }]} /></Panel><Panel title="数据形式与服务" description="平台承载形式"><ul className="tp-capability-list">{[[Network, "图谱", "产业链与技术链"], [BarChart3, "图表", "数量、趋势与分布"], [MapPinned, "地图", "空间定位与行政区切换"], [FileSearch2, "检索", "跨模块查询与过滤"]].map(([Icon, title, detail]) => { const ItemIcon = Icon as LucideIcon; return <li key={String(title)}><ItemIcon size={19} /><span><strong>{String(title)}</strong><small>{String(detail)}</small></span></li>; })}</ul></Panel></div>
-  </>;
-  if (subId === "platform-notice") return <Panel title="平台通知公告" description="系统维护、版本介绍等公告由平台运营人员发布" action={<DemoBadge>公告内容为演示</DemoBadge>}>
-    <ol className="tp-notice-list"><li><time>2026-08-10</time><span><Bell size={17} /><strong>科技专题服务演示页面说明</strong><small>演示公告 · 当前页面尚未接入正式数据</small></span></li><li><time>2026-08-05</time><span><Clock3 size={17} /><strong>系统维护通知（演示）</strong><small>演示公告 · 维护时间与影响范围待运营发布</small></span></li><li><time>2026-07-28</time><span><Activity size={17} /><strong>版本功能介绍（演示）</strong><small>演示公告 · 展示公告列表结构</small></span></li></ol>
-  </Panel>;
-  if (subId === "platform-feedback") return <div className="tp-feedback-layout">
+  return <div className="tp-feedback-layout">
     <Panel title="问题咨询" description="支持文字、图片及相关附件的演示提交">
       <form className="tp-feedback-form" onSubmit={submitFeedback} noValidate>
-        <label><span>咨询主题</span><input value={subject} onChange={(event) => setSubject(event.target.value)} maxLength={60} placeholder="请输入咨询或建议主题" /></label>
-        <label><span>咨询内容</span><textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={500} rows={6} placeholder="请描述数据问题、疑问或改进建议" /><small>{content.length} / 500</small></label>
-        <label className="tp-file-field"><span>图片或附件</span><span className="tp-upload-control"><Upload size={17} />选择文件<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt" onChange={(event) => setAttachments(Array.from(event.target.files ?? []).map((file) => file.name))} /></span>{attachments.length > 0 && <small>{attachments.join("、")}</small>}</label>
-        {feedbackError && <p className="tp-form-error" role="alert"><CircleAlert size={15} />{feedbackError}</p>}
+        <label><span>问题类型</span><span className="tp-feedback-select"><select value={feedbackCategory} onChange={(event) => setFeedbackCategory(event.target.value)}><option>数据问题</option><option>功能建议</option><option>内容纠错</option><option>其他咨询</option></select><ChevronDown size={15} aria-hidden="true" /></span></label>
+        <label><span>咨询主题</span><input value={subject} onChange={(event) => { setSubject(event.target.value); setFeedbackError(""); }} maxLength={60} placeholder="请输入咨询或建议主题" aria-invalid={Boolean(feedbackError && !subject.trim())} aria-describedby={feedbackError ? "tp-feedback-error" : undefined} required /></label>
+        <label><span>咨询内容</span><textarea value={content} onChange={(event) => { setContent(event.target.value); setFeedbackError(""); }} maxLength={500} rows={6} placeholder="请描述数据问题、疑问或改进建议" aria-invalid={Boolean(feedbackError && content.trim().length < 10)} aria-describedby={feedbackError ? "tp-feedback-error" : undefined} required /><small>{content.length} / 500</small></label>
+        <label className="tp-file-field"><span>图片或附件</span><span className="tp-upload-control"><Upload size={17} />选择文件<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt" aria-describedby="tp-upload-note" onChange={(event) => { handleAttachmentFiles(event.target.files); event.currentTarget.value = ""; }} /></span><small id="tp-upload-note">支持图片、PDF、Word、TXT；单个不超过 10 MB，最多 5 个。文件仅保留在本次演示会话。</small></label>
+        {attachments.length > 0 && <ul className="tp-attachment-list" aria-label="已选择附件">{attachments.map((attachment) => <li key={attachment.id}><FileText size={15} aria-hidden="true" /><span><strong>{attachment.name}</strong><small>{formatAttachmentSize(attachment.size)}</small></span><button type="button" aria-label={`移除附件 ${attachment.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X size={14} /></button></li>)}</ul>}
+        {feedbackError && <p id="tp-feedback-error" className="tp-form-error" role="alert"><CircleAlert size={15} />{feedbackError}</p>}
         <button className="tp-primary-button" type="submit"><Send size={16} />提交演示咨询</button>
       </form>
     </Panel>
-    <Panel title="反馈记录" description="查看运营回复；新回复以标记提醒">
-      <ol className="tp-feedback-records">{records.map((record) => <li className={record.unread ? "unread" : ""} key={record.id}><header><div><strong>{record.subject}</strong>{record.unread && <span>新回复</span>}</div><small>{record.date} · {record.status}</small></header><p>{record.content}</p><blockquote>{record.reply}</blockquote>{record.unread && <button type="button" onClick={() => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, unread: false } : item))}>标记为已读</button>}</li>)}</ol>
+    <Panel title="反馈记录" description="查看运营回复；新回复以标记提醒" action={<span className="tp-feedback-new-count">{newReplyCount} 条新回复</span>}>
+      <div className="tp-feedback-toolbar" role="group" aria-label="反馈记录筛选"><button className={feedbackFilter === "全部记录" ? "active" : ""} type="button" aria-pressed={feedbackFilter === "全部记录"} onClick={() => setFeedbackFilter("全部记录")}>全部记录 <span>{records.length}</span></button><button className={feedbackFilter === "新回复" ? "active" : ""} type="button" aria-pressed={feedbackFilter === "新回复"} onClick={() => setFeedbackFilter("新回复")}>新回复 <span>{newReplyCount}</span></button></div>
+      {visibleRecords.length ? <ol className="tp-feedback-records">{visibleRecords.map((record) => <li className={record.unread ? "unread" : ""} key={record.id}><header><div><span>{record.category}</span><strong>{record.subject}</strong>{record.unread && <b>新回复</b>}</div><small>{record.date} · {record.status}</small></header><p>{record.content}</p>{record.attachments.length > 0 && <div className="tp-feedback-attachments"><FileText size={14} aria-hidden="true" /><span>{record.attachments.join("、")}</span></div>}{record.reply ? <blockquote><strong>运营回复（演示）</strong><p>{record.reply}</p></blockquote> : <div className="tp-feedback-pending"><Clock3 size={15} aria-hidden="true" />本次会话记录尚无运营回复</div>}{record.unread && <button type="button" onClick={() => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, unread: false } : item))}><CheckCircle2 size={14} />标记为已读</button>}</li>)}</ol> : <div className="tp-feedback-empty"><CheckCircle2 size={24} /><strong>没有未读的新回复</strong><p>收到新回复后会在这里显示提醒。</p></div>}
     </Panel>
   </div>;
+}
+
+function PlatformPositionContent({ onNavigate }: { onNavigate: (module: ModuleId, sub: string) => void }) {
   return <>
-    <Panel title="平台定位" description="连接专题产业证据，服务产业研究与决策">
-      <div className="tp-position-map"><div><Landmark size={30} /><h4>科技专题服务</h4><p>围绕未来产业组织跨领域证据</p></div><ol><li><Network size={18} /><span><strong>组织信息</strong><small>产业链与技术链建立统一上下文</small></span></li><li><Database size={18} /><span><strong>汇聚证据</strong><small>企业、科研、人才、服务、政策与报告</small></span></li><li><MapPinned size={18} /><span><strong>辅助研判</strong><small>通过深圳空间指标观察区域差异</small></span></li></ol></div>
+    <Panel title="平台定位" description="连接专题产业证据，服务产业研究、信息发现与决策支持" action={<DemoBadge>定位说明</DemoBadge>}>
+      <div className="tp-platform-positioning"><section><Landmark size={30} aria-hidden="true" /><div><h4>科技专题服务</h4><p>面向未来产业，把分散的产业、技术与创新要素组织到同一专题上下文中。</p></div><dl><div><dt>服务对象</dt><dd>产业研究者、决策者与科研用户</dd></div><div><dt>核心目标</dt><dd>快速理解、比较、筛选与定位科技信息</dd></div><div><dt>数据范围</dt><dd>全球、全国、深圳及行政区多层级</dd></div></dl></section><div><h4>平台目标</h4><ol><li><Network size={18} /><span><strong>统一组织</strong><small>以产业链和技术链建立信息关联</small></span></li><li><Database size={18} /><span><strong>汇聚证据</strong><small>连接企业、科研、人才、服务、政策与报告</small></span></li><li><MapPinned size={18} /><span><strong>辅助研判</strong><small>通过趋势、图谱与空间指标观察差异</small></span></li></ol></div></div>
+      <ol className="tp-platform-value-flow" aria-label="平台服务路径"><li><span>专题产业上下文</span><small>八大未来产业与细分领域</small></li><ArrowRight size={18} aria-hidden="true" /><li><span>多维科技证据</span><small>产业、技术、主体与政策数据</small></li><ArrowRight size={18} aria-hidden="true" /><li><span>可操作的信息服务</span><small>浏览、比较、筛选、定位与反馈</small></li></ol>
     </Panel>
-    <Panel title="主要功能" description="11 项一级功能均来自标书范围"><div className="tp-function-index">{moduleDefinitions.map((item) => { const Icon = item.icon; return <span key={item.id}><Icon size={16} />{item.label}</span>; })}</div></Panel>
+    <Panel title="主要功能与使用方式" description="11 项一级功能均来自标书范围，点击可直接进入对应模块"><div className="tp-function-index">{moduleDefinitions.map((item) => { const Icon = item.icon; return <button type="button" onClick={() => onNavigate(item.id, item.subs[0].id)} key={item.id}><Icon size={16} aria-hidden="true" /><span>{item.label}</span><ChevronRight size={14} aria-hidden="true" /></button>; })}</div><ol className="tp-operation-flow"><li><span>1</span><div><strong>选择专题产业</strong><small>在页面顶部确定当前产业上下文</small></div></li><li><span>2</span><div><strong>进入功能模块</strong><small>从左侧目录选择需要查看的服务</small></div></li><li><span>3</span><div><strong>筛选并定位内容</strong><small>使用区块控件和右侧定位器完成操作</small></div></li></ol></Panel>
   </>;
+}
+
+function PlatformContent({ subId, showToast, onNavigate }: { subId: string; showToast: (message: string) => void; onNavigate: (module: ModuleId, sub: string) => void }) {
+  if (subId === "platform-data") return <PlatformDataContent />;
+  if (subId === "platform-notice") return <PlatformNoticeContent />;
+  if (subId === "platform-feedback") return <PlatformFeedbackContent showToast={showToast} />;
+  return <PlatformPositionContent onNavigate={onNavigate} />;
 }
 
 type SearchRecord = { id: string; module: ModuleId; sub: string; section: string; title: string; content: string };
@@ -2611,13 +2795,15 @@ function SearchContent({ subId, onNavigate }: { subId: string; onNavigate: (modu
   </>;
 }
 
-function renderModuleContent({ moduleId, subId, industry, openDialog, showToast, onNavigate }: {
+function renderModuleContent({ moduleId, subId, industry, openDialog, showToast, onNavigate, selectedReportId, onSelectReport }: {
   moduleId: ModuleId;
   subId: string;
   industry: Industry;
   openDialog: (dialog: DialogState) => void;
   showToast: (message: string) => void;
   onNavigate: (module: ModuleId, sub: string) => void;
+  selectedReportId: string;
+  onSelectReport: (reportId: string) => void;
 }) {
   switch (moduleId) {
     case "panorama": return <PanoramaContent subId={subId} industry={industry} openDialog={openDialog} />;
@@ -2625,11 +2811,11 @@ function renderModuleContent({ moduleId, subId, industry, openDialog, showToast,
     case "enterprise": return <EnterpriseContent subId={subId} industry={industry} openDialog={openDialog} />;
     case "research": return <ResearchContent subId={subId} industry={industry} />;
     case "talent": return <TalentContent subId={subId} industry={industry} />;
-    case "service": return <ServiceContent subId={subId} industry={industry} />;
-    case "policy": return <PolicyContent subId={subId} industry={industry} />;
-    case "one-map": return <OneMapContent subId={subId} industry={industry} openDialog={openDialog} />;
-    case "reports": return <ReportsContent subId={subId} industry={industry} openDialog={openDialog} showToast={showToast} />;
-    case "platform": return <PlatformContent subId={subId} showToast={showToast} />;
+    case "service": return <ServiceModule subId={subId} industry={industry} />;
+    case "policy": return <PolicyModule subId={subId} industry={industry} />;
+    case "one-map": return <OneMapModule subId={subId} industry={industry} />;
+    case "reports": return <ReportsContent subId={subId} industry={industry} selectedReportId={selectedReportId} onSelectReport={onSelectReport} showToast={showToast} />;
+    case "platform": return <PlatformContent subId={subId} showToast={showToast} onNavigate={onNavigate} />;
     case "search": return <SearchContent subId={subId} onNavigate={onNavigate} />;
   }
 }
@@ -2637,6 +2823,7 @@ function renderModuleContent({ moduleId, subId, industry, openDialog, showToast,
 export default function TechnologyTopicServicePage() {
   const [topicRoute, setTopicRoute] = useState<TopicRoute>(() => parseTopicRoute());
   const { module: activeModule, sub: activeSub, industry } = topicRoute;
+  const [selectedReportId, setSelectedReportId] = useState(() => reportRecords.find((report) => report.industry === topicRoute.industry)?.id ?? reportRecords[0].id);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [toast, setToast] = useState("");
   const [activeLocator, setActiveLocator] = useState(activeSub);
@@ -2644,9 +2831,18 @@ export default function TechnologyTopicServicePage() {
   const initialSubsectionAligned = useRef(false);
   const activeDefinition = moduleById.get(activeModule) ?? moduleDefinitions[0];
   const ActiveIcon = activeDefinition.icon;
+  const moduleContextLabel = activeModule === "platform" ? "门户公共信息" : `${industry}专题`;
   const flatSubItems = activeModule === "search"
     ? [{ ...activeDefinition.subs[0], label: "门户全文检索与结果展示", renderSub: "search-results" }]
     : activeDefinition.subs.map((sub) => ({ ...sub, renderSub: sub.id }));
+
+  useEffect(() => {
+    if (activeModule !== "reports") return;
+    setSelectedReportId((current) => {
+      const selected = reportRecords.find((report) => report.id === current);
+      return selected?.industry === industry ? current : reportRecords.find((report) => report.industry === industry)?.id ?? reportRecords[0].id;
+    });
+  }, [activeModule, industry]);
 
   useEffect(() => {
     setActiveLocator(activeSub);
@@ -2717,7 +2913,7 @@ export default function TechnologyTopicServicePage() {
         const nextUrl = buildTopicUrl(next);
         window.history.pushState(window.history.state, "", nextUrl);
         setTopicRoute(next);
-        window.requestAnimationFrame(() => document.getElementById("tp-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        window.requestAnimationFrame(() => document.getElementById("tp-workspace")?.scrollIntoView({ behavior: preferredScrollBehavior(), block: "start" }));
       }
     };
     window.addEventListener("keydown", openSearch);
@@ -2732,7 +2928,7 @@ export default function TechnologyTopicServicePage() {
     }
     setTopicRoute(next);
     setDialog(null);
-    if (scroll) window.requestAnimationFrame(() => document.getElementById("tp-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    if (scroll) window.requestAnimationFrame(() => document.getElementById("tp-workspace")?.scrollIntoView({ behavior: preferredScrollBehavior(), block: "start" }));
   };
 
   const selectModule = (moduleId: ModuleId, scroll = false) => {
@@ -2744,20 +2940,28 @@ export default function TechnologyTopicServicePage() {
   const navigateToContent = (module: ModuleId, sub: string) => {
     commitTopicRoute({ industry, module, sub });
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      document.getElementById(`tp-subsection-${sub}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById(`tp-subsection-${sub}`)?.scrollIntoView({ behavior: preferredScrollBehavior(), block: "start" });
     }));
   };
   const locateSubsection = (sub: string) => {
     setActiveLocator(sub);
     commitTopicRoute({ ...topicRoute, sub }, { replace: true });
-    window.requestAnimationFrame(() => document.getElementById(`tp-subsection-${sub}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    window.requestAnimationFrame(() => document.getElementById(`tp-subsection-${sub}`)?.scrollIntoView({ behavior: preferredScrollBehavior(), block: "start" }));
+  };
+  const selectReport = (reportId: string) => {
+    const report = reportRecords.find((item) => item.id === reportId);
+    const nextIndustry = report?.industry ?? industry;
+    setSelectedReportId(reportId);
+    setActiveLocator("report-view");
+    commitTopicRoute({ industry: nextIndustry, module: "reports", sub: "report-view" }, { replace: true });
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById("tp-subsection-report-view")?.scrollIntoView({ behavior: preferredScrollBehavior(), block: "start" })));
   };
 
   return <main className="tp-page">
     <PortalHeader currentPage="technology-topic-service" />
 
     <section id="tp-top" className="tp-portal-hero" aria-labelledby="tp-page-title">
-      <img className="tp-hero-art" src="/assets/thinktank-hero-compact.png" alt="" />
+      <img className="tp-hero-art" src="./assets/thinktank-hero-compact.png" alt="" />
       <div className="tp-portal-hero-inner">
         <div className="tp-hero-copy">
           <h1 id="tp-page-title">科技专题服务</h1>
@@ -2784,7 +2988,7 @@ export default function TechnologyTopicServicePage() {
         <header className="tp-section-header">
           <div className="tp-section-heading">
             <span className="tp-section-icon"><ActiveIcon size={22} aria-hidden="true" /></span>
-            <div><h2 id="tp-module-title">{activeDefinition.label}</h2><p>{industry}专题&nbsp;｜&nbsp;{activeDefinition.description}</p></div>
+            <div><h2 id="tp-module-title">{activeDefinition.label}</h2><p>{moduleContextLabel}&nbsp;｜&nbsp;{activeDefinition.description}</p></div>
           </div>
           <div className="tp-section-actions"><DemoBadge>演示数据</DemoBadge></div>
         </header>
@@ -2792,8 +2996,8 @@ export default function TechnologyTopicServicePage() {
         <div className="tp-workspace">
           <div id="tp-module-panel" className="tp-module-content tp-module-content-flat" key={`${activeModule}-${industry}`}>
             {flatSubItems.map((sub) => <section id={`tp-subsection-${sub.id}`} className={`tp-flat-subsection${activeLocator === sub.id || activeModule === "search" ? " is-target" : ""}`} aria-labelledby={`tp-subsection-title-${sub.id}`} key={sub.id}>
-              <header className="tp-flat-subsection-header"><h3 id={`tp-subsection-title-${sub.id}`}>{sub.label}</h3><span>{industry} · {activeDefinition.label}</span></header>
-              {renderModuleContent({ moduleId: activeModule, subId: sub.renderSub, industry, openDialog: setDialog, showToast, onNavigate: navigateToContent })}
+              <header className="tp-flat-subsection-header"><h3 id={`tp-subsection-title-${sub.id}`}>{sub.label}</h3><span>{moduleContextLabel} · {activeDefinition.label}</span></header>
+              {renderModuleContent({ moduleId: activeModule, subId: sub.renderSub, industry, openDialog: setDialog, showToast, onNavigate: navigateToContent, selectedReportId, onSelectReport: selectReport })}
             </section>)}
           </div>
         </div>
@@ -2804,7 +3008,7 @@ export default function TechnologyTopicServicePage() {
         {activeDefinition.subs.map((sub) => <button className={activeLocator === sub.id ? "active" : ""} type="button" aria-current={activeLocator === sub.id ? "location" : undefined} onClick={() => locateSubsection(sub.id)} key={sub.id}><span>{sub.label}</span></button>)}
       </nav>}
 
-      <footer className="tp-footer"><div><img src="/assets/gkx-logo.png" alt="" /><span><strong>科技专题服务</strong><small>深圳国际科技信息中心</small></span></div><p>当前页面仅用于功能与交互演示，所有数据、排序、对象与结论均不代表真实情况。</p></footer>
+      <footer className="tp-footer"><div><img src="./assets/gkx-logo.png" alt="" /><span><strong>科技专题服务</strong><small>深圳国际科技信息中心</small></span></div><p>当前页面仅用于功能与交互演示，所有数据、排序、对象与结论均不代表真实情况。</p></footer>
     </div>
 
     {dialog && <TopicDialog dialog={dialog} onClose={() => setDialog(null)} />}
