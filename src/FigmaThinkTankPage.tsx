@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import {
   Building2,
   CalendarDays,
@@ -14,9 +14,10 @@ import {
   UserRound,
 } from "lucide-react";
 import PortalHeader from "./PortalHeader";
+import PageSectionLocator from "./PageSectionLocator";
 import "./figma-think-tank.css";
 
-const assetRoot = "/assets/figma-think-tank";
+const assetRoot = "./assets/figma-think-tank";
 
 const reportTitle = "人工智能产业发展方向与关键能力建设研究";
 const reportSummary = "研判通用大模型、具身智能和行业智能体的发展态势，提出自主能力与应用生态建设路径";
@@ -46,6 +47,44 @@ const migrationStops = [
   { city: "上海", country: "中国", date: "2020.09–至今", papers: 30 },
 ];
 
+const technologyBranches = [
+  {
+    name: "机器学习",
+    papers: 3287,
+    leaves: [
+      { name: "深度学习", papers: 1234, relation: "核心分支" },
+      { name: "强化学习", papers: 890, relation: "关联分支" },
+      { name: "迁移学习", papers: 654, relation: "延伸分支" },
+    ],
+  },
+  {
+    name: "计算机视觉",
+    papers: 2168,
+    leaves: [
+      { name: "目标检测", papers: 890, relation: "核心分支" },
+      { name: "图像分割", papers: 654, relation: "关键支撑" },
+      { name: "三维视觉", papers: 432, relation: "前沿延伸" },
+    ],
+  },
+  {
+    name: "自然语言处理",
+    papers: 1986,
+    leaves: [
+      { name: "知识图谱", papers: 742, relation: "关键支撑" },
+      { name: "多模态理解", papers: 698, relation: "交叉融合" },
+      { name: "智能体交互", papers: 546, relation: "产品方向" },
+    ],
+  },
+];
+
+const thinkTankLocatorItems = [
+  { id: "technology", label: "领域技术路线" },
+  { id: "reports", label: "战略咨询报告" },
+  { id: "talent", label: "人才分布态势" },
+  { id: "mobility", label: "人才流动趋势" },
+  { id: "news", label: "人才动态资讯" },
+];
+
 function SectionHeading({ title, subtitle, children }: { title: string; subtitle: string; children?: ReactNode }) {
   return (
     <header className="fp-section-heading ttf-heading">
@@ -70,7 +109,7 @@ function MetricStrip({ items }: { items: Array<{ label: string; value: string; t
 
 function LineChart() {
   return (
-    <svg className="ttf-line-chart" viewBox="0 0 820 220" role="img" aria-label="2021至2025年技术发展概览">
+    <svg className="ttf-line-chart" viewBox="0 0 820 220" role="img" aria-label="2021至2025年技术发展演示概览：技术总量约为40、45、70、100、110，突破性技术约为30、35、60、90、100。">
       <defs>
         <linearGradient id="ttf-blue-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#1877ff" stopOpacity=".18"/><stop offset="1" stopColor="#1877ff" stopOpacity="0"/></linearGradient>
         <linearGradient id="ttf-green-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#00bc37" stopOpacity=".15"/><stop offset="1" stopColor="#00bc37" stopOpacity="0"/></linearGradient>
@@ -89,12 +128,29 @@ function LineChart() {
 }
 
 function TechnologySection() {
-  const [expanded, setExpanded] = useState(true);
+  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(() => new Set(technologyBranches.map((item) => item.name)));
+  const [treeScale, setTreeScale] = useState(1);
+  const [treeQuery, setTreeQuery] = useState("");
+  const [selectedNode, setSelectedNode] = useState({ title: "人工智能", detail: "3 条关键技术路线 · 9 个细分技术节点" });
+  const normalizedQuery = treeQuery.trim();
+  const visibleBranches = technologyBranches.map((branch) => {
+    if (!normalizedQuery || branch.name.includes(normalizedQuery)) return branch;
+    return { ...branch, leaves: branch.leaves.filter((leaf) => `${leaf.name}${leaf.relation}`.includes(normalizedQuery)) };
+  }).filter((branch) => !normalizedQuery || branch.name.includes(normalizedQuery) || branch.leaves.length);
+  const expandedVisibleCount = visibleBranches.filter((branch) => expandedBranches.has(branch.name)).length;
+  const toggleBranch = (branchName: string) => {
+    setExpandedBranches((current) => {
+      const next = new Set(current);
+      if (next.has(branchName)) next.delete(branchName);
+      else next.add(branchName);
+      return next;
+    });
+  };
   return (
     <section id="technology" className="ttf-section ttf-tech">
       <SectionHeading title="领域技术路线" subtitle="总体画像｜发展目标｜具体任务｜保障措施">
         <MiniSelect label="当前领域" value="人工智能" />
-        <label className="ttf-section-search"><input placeholder="搜索关键词" aria-label="搜索技术关键词"/><Search size={16}/></label>
+        <label className="ttf-section-search"><input value={treeQuery} onChange={(event) => setTreeQuery(event.target.value)} placeholder="搜索技术分支" aria-label="搜索技术分支"/><Search size={16}/></label>
       </SectionHeading>
       <MetricStrip items={[
         { label: "论文总数", value: "12,345", trend: "15%" },
@@ -131,13 +187,29 @@ function TechnologySection() {
         </div>
       </div>
       <article className="fp-card ttf-tree-panel">
-        <PanelTitle title="关键技术分枝树" aside="内容为近五年数据" />
-        <div className="ttf-tree-toolbar"><button type="button" aria-label="缩小"><Minus size={14}/></button><span>64%</span><button type="button" aria-label="放大"><Plus size={14}/></button><button className="active" type="button" onClick={()=>setExpanded(true)}>全部展开</button><button type="button" onClick={()=>setExpanded(false)}>全部收起</button></div>
-        <div className={`ttf-tree${expanded ? " is-expanded" : ""}`}>
-          <div className="ttf-tree-root"><b>人工智能</b><span>334,287 篇论文</span><em>3项</em></div>
-          <svg aria-hidden="true" viewBox="0 0 180 320"><path d="M0 160 H70 M70 42 V278 M70 42 H180 M70 160 H180 M70 278 H180"/></svg>
-          {expanded ? <div className="ttf-tree-children">{[1,2,3].map((item)=><article key={item}><b>机器学习</b><span>3,287 篇论文</span><em>3项</em></article>)}</div> : null}
+        <PanelTitle title="关键技术分枝树" aside="节点可点击 · 内容为近五年演示数据" />
+        <div className="ttf-tree-toolbar">
+          <button type="button" onClick={() => setTreeScale((value) => Math.max(.75, Number((value - .1).toFixed(2))))} disabled={treeScale <= .75} aria-label="缩小技术分枝树"><Minus size={14}/></button>
+          <span aria-live="polite">{Math.round(treeScale * 100)}%</span>
+          <button type="button" onClick={() => setTreeScale((value) => Math.min(1.25, Number((value + .1).toFixed(2))))} disabled={treeScale >= 1.25} aria-label="放大技术分枝树"><Plus size={14}/></button>
+          <button className={expandedVisibleCount === visibleBranches.length && visibleBranches.length ? "active" : ""} type="button" disabled={!visibleBranches.length || expandedVisibleCount === visibleBranches.length} onClick={() => setExpandedBranches(new Set(visibleBranches.map((item) => item.name)))}>全部展开</button>
+          <button type="button" disabled={!expandedVisibleCount} onClick={() => setExpandedBranches(new Set())}>全部收起</button>
         </div>
+        <div className="ttf-tree-viewport" aria-label="人工智能关键技术分枝树，可滚动查看">
+          {visibleBranches.length ? <div className="ttf-tree-sizer" style={{ "--ttf-tree-scale": treeScale } as CSSProperties}>
+            <div className="ttf-tree-canvas">
+              <button type="button" className={`ttf-tree-root${selectedNode.title === "人工智能" ? " is-selected" : ""}`} onClick={() => setSelectedNode({ title: "人工智能", detail: "3 条关键技术路线 · 9 个细分技术节点" })}><small>领域主线</small><b>人工智能</b><span>334,287 篇论文</span><em>{technologyBranches.length} 条路线</em></button>
+              <ol className="ttf-tree-branches">{visibleBranches.map((branch) => {
+                const expanded = expandedBranches.has(branch.name);
+                return <li className={expanded ? "is-expanded" : ""} key={branch.name}>
+                  <button type="button" className={`ttf-tree-branch${selectedNode.title === branch.name ? " is-selected" : ""}`} aria-expanded={expanded} onClick={() => { toggleBranch(branch.name); setSelectedNode({ title: branch.name, detail: `${branch.papers.toLocaleString("zh-CN")} 篇论文 · ${branch.leaves.length} 个细分节点` }); }}><b>{branch.name}</b><span>{branch.papers.toLocaleString("zh-CN")} 篇论文</span><em>{branch.leaves.length} 项</em></button>
+                  {expanded ? <ol className="ttf-tree-leaves">{branch.leaves.map((leaf) => <li key={leaf.name}><button type="button" className={selectedNode.title === leaf.name ? "is-selected" : ""} onClick={() => setSelectedNode({ title: leaf.name, detail: `${leaf.relation} · ${leaf.papers.toLocaleString("zh-CN")} 篇关联论文` })}><span><b>{leaf.name}</b><small>{leaf.relation}</small></span><em>{leaf.papers.toLocaleString("zh-CN")} 篇</em></button></li>)}</ol> : null}
+                </li>;
+              })}</ol>
+            </div>
+          </div> : <div className="ttf-tree-empty" role="status"><strong>未找到匹配的技术分支</strong><button type="button" onClick={() => setTreeQuery("")}>清除搜索</button></div>}
+        </div>
+        <div className="ttf-tree-detail" aria-live="polite"><strong>{selectedNode.title}</strong><span>{selectedNode.detail}</span><small>点击主干展开或收起细分节点</small></div>
       </article>
     </section>
   );
@@ -164,7 +236,7 @@ function ReportsSection() {
 }
 
 function RadarChart() {
-  return <svg className="ttf-radar" viewBox="0 0 360 330" role="img" aria-label="北京与上海人才影响力对比">
+  return <svg className="ttf-radar" viewBox="0 0 360 330" role="img" aria-label="北京与上海人才影响力六维演示对比：上海在人才储备、成果储备、学术影响力、顶级专家和产业转化维度较高，北京在新兴学者维度较高。">
     {[1,.75,.5,.25].map((scale)=><polygon key={scale} points={`180,${35+(1-scale)*125} ${288-(1-scale)*108},${98+(1-scale)*62} ${288-(1-scale)*108},${222-(1-scale)*62} 180,${285-(1-scale)*125} ${72+(1-scale)*108},${222-(1-scale)*62} ${72+(1-scale)*108},${98+(1-scale)*62}`} fill="none" stroke="#d9e0e8"/>) }
     {["180,35","288,98","288,222","180,285","72,222","72,98"].map((p)=><line key={p} x1="180" y1="160" x2={p.split(",")[0]} y2={p.split(",")[1]} stroke="#e4e8ee"/>)}
     <polygon points="180,62 267,110 255,211 180,268 91,211 87,110" fill="rgba(24,119,255,.11)" stroke="#1877ff" strokeWidth="2"/>
@@ -197,7 +269,7 @@ function CareerRadar() {
     "165,101 194,117 194,137 165,153 136,137 136,117",
   ];
   const axes = [[165,24],[280,86],[280,168],[165,230],[50,168],[50,86]];
-  return <svg className="ttf-career-radar" viewBox="0 0 330 250" role="img" aria-label="学术生涯分布">
+  return <svg className="ttf-career-radar" viewBox="0 0 330 250" role="img" aria-label="学术生涯驻点演示分布：加拿大多伦多、法国巴黎、中国北京、美国斯坦福、中国深圳和中国上海六个驻点。">
     {rings.map((points)=><polygon key={points} points={points} fill="none" stroke="#d9e0e8"/>)}
     {axes.map(([x,y])=><line key={`${x}-${y}`} x1="165" y1="127" x2={x} y2={y} stroke="#e5e9ef"/>)}
     <polygon points="165,64 240,102 235,157 165,194 87,157 100,105" fill="rgba(24,119,255,.12)" stroke="#1877ff" strokeWidth="2"/>
@@ -213,7 +285,7 @@ function MobilitySection() {
     <article className="fp-card ttf-mobility-workbench">
       <PanelTitle title="学者迁徙图" aside="5 次迁徙｜6 个驻点"/>
       <div className="ttf-map">
-        <img src="/assets/thinktank-world-map.svg" alt="世界地图" />
+        <img src="./assets/thinktank-world-map.svg" alt="世界地图" />
         <svg viewBox="0 0 1120 410" aria-hidden="true"><path d="M190 145 C300 88 365 98 437 120 S570 145 665 110 S800 130 880 155 S960 170 1010 150"/>{[[190,145],[350,103],[665,110],[820,137],[930,164],[1010,150]].map(([x,y],index)=><g key={`${x}-${y}`}><circle cx={x} cy={y} r="10"/><text x={x} y={y+4} textAnchor="middle">{index+1}</text></g>)}</svg>
         <span className="m1">多伦多</span><span className="m2">巴黎</span><span className="m3">北京</span><span className="m4">新加坡</span><span className="m5">深圳</span><span className="m6">上海</span>
         <div className="ttf-map-legend"><span><i/>迁徙路线</span><span><i/>历史驻点</span><span><i/>当前驻点</span></div>
@@ -242,9 +314,10 @@ export default function FigmaThinkTankPage() {
   return <main className="ttf-page">
     <PortalHeader currentPage="think-tank" />
     <section id="top" className="ttf-hero">
-      <img src="/assets/thinktank-hero-reference.png" alt="" />
+      <img src="./assets/thinktank-hero-reference.png" alt="" />
       <div className="ttf-hero-copy"><h1>新型高端智库</h1><p>整合领域技术路线梳理、战略咨询报告、人才分布与流动分析，提供高价值的产业、人才、技术决策参考</p><span>发布话题</span></div>
     </section>
     <div className="ttf-content"><TechnologySection/><ReportsSection/><TalentSection/><MobilitySection/><NewsSection/></div>
+    <PageSectionLocator items={thinkTankLocatorItems} topId="top" label="内容定位" />
   </main>;
 }
